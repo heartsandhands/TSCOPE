@@ -1,0 +1,31 @@
+body{
+		text-align: center;
+}
+main{
+	display: inline-block;
+}
+
+.basic-button{
+	background: -webkit-linear-gradient(#ffffff, #e6e6e6);
+    background: -o-linear-gradient(#ffffff, #e6e6e6);
+    background: -moz-linear-gradient(#ffffff, #e6e6e6);
+    background: linear-gradient(#ffffff, #e6e6e6);
+	border: solid 1px grey;
+	border-radius: 2px;
+	padding: 4px;
+	color: grey;
+	text-decoration: none;
+	position: relative;
+	top: 20px;
+}
+
+.basic-button:active{
+	background: -webkit-linear-gradient(#e6e6e6, #e6e6e6);
+    background: -o-linear-gradient(#e6e6e6, #e6e6e6);
+    background: -moz-linear-gradient(#e6e6e6, #e6e6e6);
+    background: linear-gradient(#e6e6e6, #e6e6e6);
+}
+
+.no-display{
+	display: none;
+}

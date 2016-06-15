@@ -1,0 +1,110 @@
+<html>
+	<head>
+		<script src="scripts/jquery-2.2.3.min.js"></script>
+		<script src="scripts/jquery-ui.min.js"></script>
+		<link rel="stylesheet" href="scripts/jquery-ui.min.css"/>
+		<link rel="stylesheet" href="scripts/jquery-ui.structure.min.css"/>
+		<link rel="stylesheet" href="scripts/jquery-ui.theme.min.css"/>
+		<link rel="stylesheet" href="styles/style.css"/>
+	</head>
+	<body>
+		<main>
+			<header>Traffic Scope Report</header>
+			<input id="username" placeholder="Username"/>
+			<input type="password" id="password" placeholder="Password"/>
+			<div class="date_area">
+				<input id="start-date" class="datepicker" placeholder="Start Date"/>
+			</div>
+			<div class="date_area">
+				<input id="end-date" class="datepicker" placeholder="End Date"/>
+			</div>
+			<span id="run-report" class="basic-button">Run Report</span>
+			<a id="download-report" href="" download="" class="basic-button no-display">Download Report</a>
+		</main>
+		<script>
+			$(function(){
+				$.ajaxSetup({timeout:1000*60*15});
+				//Initialize the datepicker
+				$(".datepicker").datepicker({
+					dateFormat: "yy-mm-dd"
+				});
+				
+				$("#run-report").click(function(){
+					//Thirty days in milliseconds
+					var thirty_in_ms = 1000*60*60*24*30;
+					//Grab the dates from the date pickers.
+					var start_date = $("#start-date").val(),
+					    end_date   = $("#end-date").val(),
+				        user       = $("#username").val(),
+					    pass       = $("#password").val();
+					console.log(((new Date(end_date)).getTime() - (new Date(start_date)).getTime()));
+					//If locked
+					if(window.trfscp.lock)
+						window.alert("Wait for current report to finish!");
+					//If either are empty, don't submit
+					else if(!start_date || !end_date)
+						window.alert("Both date inputs must have a value!");
+					//If date range is too large.
+					else if(((new Date(end_date)).getTime() - (new Date(start_date)).getTime()) > thirty_in_ms)
+						window.alert("Date range too large! Under 30 Days");
+					//Make sure the start date is less than the end date.
+					else if(((new Date(end_date)).getTime() - (new Date(start_date)).getTime()) < 0)
+						window.alert("Start Date is after the End Date!");
+					//Need both user and password
+					else if(!user || !pass)
+						window.alert("Need a user name and a password!");
+					else{
+						$.ajax({
+							data	: {
+										"start_date" : start_date, 
+										"end_date"   : end_date,
+									    "user"       : user,
+										"pass"       : pass
+									  },
+							url 	: "run_query.php",
+							success : function(data,textStatus,jqXHR){
+								if(data.match(/\{"error"/)){
+									try{
+										window.alert(JSON.parse(data)["error"]);
+									}
+									catch(e){
+										if(e instanceof SyntaxError)
+											console.log("Unable to parse Error JSON");
+									}
+								}
+								else
+									window.trfscp.prepDataForDownload(data);
+								window.trfscp.lock = false;
+							},
+							error : function(jqXHR,textStatus,errorThrown){
+								window.alert("Error with Query: "+textStatus);
+							}
+						});
+						window.trfscp.lock = true;
+					}
+					
+					
+				});
+				
+				window.trfscp = {
+					download_url : null,
+					lock : false,
+					prepDataForDownload : function(data){
+						var download_button = $("#download-report");
+						//Makes the link clickable by removing the inactive_link class.
+						$(download_button).removeClass("no-display");
+						//Create a Blob with the text string
+						var data = new Blob([data],{type:'text/plain'});
+						//Clears out any existing text file, then creates a new one
+						if(window.trfscp.download_url !== null)
+							window.URL.revokeObjectURL(window.trfscp.download_url);
+						window.trfscp.download_url = window.URL.createObjectURL(data);
+						//Style the link accordingly
+						$(download_button).attr("href",window.trfscp.download_url);
+						$(download_button).attr("download","traffic_scope_report.csv");
+					}
+				};
+			});
+		</script>
+	</body>
+</html>
